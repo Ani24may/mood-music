@@ -228,6 +228,8 @@ async def search_specific_song(song_name, artist):
         tracks = _parse_tracks(data)
         if tracks:
             return tracks[0]
+    except httpx.HTTPStatusError as e:
+        logger.warning(f"Failed to find '{song_name}' by {artist}: HTTP {e.response.status_code}")
     except Exception as e:
         logger.warning(f"Failed to find '{song_name}' by {artist}: {type(e).__name__}")
 
@@ -238,6 +240,8 @@ async def search_specific_song(song_name, artist):
         tracks = _parse_tracks(data)
         if tracks:
             return tracks[0]
+    except httpx.HTTPStatusError as e:
+        logger.warning(f"Fallback search failed for '{song_name}': HTTP {e.response.status_code}")
     except Exception as e:
         logger.warning(f"Fallback search failed for '{song_name}': {type(e).__name__}")
 
