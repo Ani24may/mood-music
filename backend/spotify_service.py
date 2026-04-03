@@ -290,44 +290,37 @@ async def search_specific_song(song_name, artist):
 
 
 async def search_songs_by_recommendations(ai_songs):
-    """Search Spotify for AI-recommended songs using batch queries.
-    Groups songs into fewer searches to avoid rate limits."""
+    """Search Spotify for AI-recommended songs.
+    Stops early on repeated failures to avoid long waits."""
     found_tracks = []
-    import asyncio
+    consecutive_failures = 0
 
-    # Strategy: search 2-3 songs per query instead of 1 each
-    # This cuts Spotify API calls from 10-20 down to 3-5
     for song in ai_songs:
         if len(found_tracks) >= 10:
             break
 
-        # Single combined query — no field qualifiers (more forgiving)
+        # 2 consecutive failures = Spotify is blocked, stop trying
+        if consecutive_failures >= 2:
+            logger.warning(f"Stopping Spotify search after {consecutive_failures} consecutive failures. Got {len(found_tracks)} songs.")
+            break
+
         query = f"{song['name']} {song['artist']}"
         try:
-            data = await _spotify_search(query, limit=1)
+            data = await _spotify_search(query, limit=1, retries=0)
             tracks = _parse_tracks(data)
             if tracks:
                 found_tracks.append(tracks[0])
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 429:
-                wait = int(e.response.headers.get("Retry-After", 2))
-                if wait > 60:
-                    # Hard block — stop trying, return what we have
-                    logger.warning(f"Spotify hard rate limit ({wait}s). Stopping search with {len(found_tracks)} songs.")
-                    break
-                # Soft rate limit — wait and retry
-                logger.warning(f"Spotify 429, waiting {wait}s")
-                await asyncio.sleep(min(wait, 5))
-                try:
-                    data = await _spotify_search(query, limit=1, retries=0)
-                    tracks = _parse_tracks(data)
-                    if tracks:
-                        found_tracks.append(tracks[0])
-                except Exception:
-                    pass
+                consecutive_failures = 0
             else:
-                logger.warning(f"Spotify search failed for '{song['name']}': HTTP {e.response.status_code}")
+                consecutive_failures += 1
+        except httpx.HTTPStatusError as e:
+            consecutive_failures += 1
+            if e.response.status_code == 429:
+                logger.warning(f"Spotify 429 for '{song['name']}'")
+            else:
+                logger.warning(f"Spotify HTTP {e.response.status_code} for '{song['name']}'")
         except Exception as e:
+            consecutive_failures += 1
             logger.warning(f"Spotify search failed for '{song['name']}': {type(e).__name__}")
 
     logger.info(f"Found {len(found_tracks)}/{len(ai_songs)} AI-recommended songs on Spotify")
