@@ -200,10 +200,14 @@ async def _spotify_search(query, limit=10, retries=2):
                     response.raise_for_status()
 
                 if response.status_code == 429:
+                    wait = int(response.headers.get("Retry-After", 1))
+                    if wait > 60:
+                        # Hard block — don't retry, fail fast
+                        logger.warning(f"Spotify hard rate limit: Retry-After={wait}s")
+                        response.raise_for_status()
                     if attempt < retries:
                         import asyncio
-                        wait = int(response.headers.get("Retry-After", 1))
-                        await asyncio.sleep(min(wait, 3))
+                        await asyncio.sleep(min(wait, 5))
                         continue
                     response.raise_for_status()
 
@@ -269,11 +273,14 @@ async def search_songs_by_recommendations(ai_songs):
                 found_tracks.append(tracks[0])
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:
-                # Hit rate limit — wait and try remaining songs
                 wait = int(e.response.headers.get("Retry-After", 2))
+                if wait > 60:
+                    # Hard block — stop trying, return what we have
+                    logger.warning(f"Spotify hard rate limit ({wait}s). Stopping search with {len(found_tracks)} songs.")
+                    break
+                # Soft rate limit — wait and retry
                 logger.warning(f"Spotify 429, waiting {wait}s")
                 await asyncio.sleep(min(wait, 5))
-                # Retry this song once
                 try:
                     data = await _spotify_search(query, limit=1, retries=0)
                     tracks = _parse_tracks(data)
