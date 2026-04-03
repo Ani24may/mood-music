@@ -62,7 +62,6 @@ export default function App() {
       const fetchedSongs = data.songs || [];
       setSongs(fetchedSongs);
       setMoodTags(data.mood_tags || null);
-      setMessage(data.message || null);
       setStory(data.story || null);
 
       // Update remaining from response
@@ -70,6 +69,7 @@ export default function App() {
       if (data.limit !== undefined) setLimit(data.limit);
 
       if (fetchedSongs.length > 0) {
+        setMessage(data.message || null);
         setSelectedSong(fetchedSongs[0]);
         setShowResult(true);
         setPastSessions((prev) => {
@@ -98,6 +98,7 @@ export default function App() {
     setShowResult(false);
     setSelectedSong(null);
     setSongs([]);
+    setMessage(null);
   };
 
   const handleSelectSong = (song) => {
@@ -151,7 +152,7 @@ export default function App() {
 
           <ErrorDisplay
             error={error}
-            message={!showResult ? message : null}
+            message={message}
             onSuggestion={(mood) => handleGenerate(mood, "Any")}
           />
 
