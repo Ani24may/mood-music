@@ -19,6 +19,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress httpx request logging — it leaks API keys in URLs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 
 # === Security Middleware ===
 
