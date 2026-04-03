@@ -249,14 +249,42 @@ async def search_specific_song(song_name, artist):
 
 
 async def search_songs_by_recommendations(ai_songs):
-    """Search Spotify for each AI-recommended song.
-    Returns list of found tracks."""
+    """Search Spotify for AI-recommended songs using batch queries.
+    Groups songs into fewer searches to avoid rate limits."""
     found_tracks = []
+    import asyncio
 
+    # Strategy: search 2-3 songs per query instead of 1 each
+    # This cuts Spotify API calls from 10-20 down to 3-5
     for song in ai_songs:
-        track = await search_specific_song(song["name"], song["artist"])
-        if track:
-            found_tracks.append(track)
+        if len(found_tracks) >= 10:
+            break
+
+        # Single combined query — no field qualifiers (more forgiving)
+        query = f"{song['name']} {song['artist']}"
+        try:
+            data = await _spotify_search(query, limit=1)
+            tracks = _parse_tracks(data)
+            if tracks:
+                found_tracks.append(tracks[0])
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                # Hit rate limit — wait and try remaining songs
+                wait = int(e.response.headers.get("Retry-After", 2))
+                logger.warning(f"Spotify 429, waiting {wait}s")
+                await asyncio.sleep(min(wait, 5))
+                # Retry this song once
+                try:
+                    data = await _spotify_search(query, limit=1, retries=0)
+                    tracks = _parse_tracks(data)
+                    if tracks:
+                        found_tracks.append(tracks[0])
+                except Exception:
+                    pass
+            else:
+                logger.warning(f"Spotify search failed for '{song['name']}': HTTP {e.response.status_code}")
+        except Exception as e:
+            logger.warning(f"Spotify search failed for '{song['name']}': {type(e).__name__}")
 
     logger.info(f"Found {len(found_tracks)}/{len(ai_songs)} AI-recommended songs on Spotify")
     return found_tracks
