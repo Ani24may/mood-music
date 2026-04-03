@@ -212,6 +212,57 @@ body {
   align-items: center;
 }
 
+/* Voice button */
+.voice-btn {
+  position: absolute;
+  left: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-glass);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+
+.voice-btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.voice-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.voice-btn.listening {
+  color: var(--pink);
+  border-color: var(--pink-dim);
+  background: rgba(232, 120, 168, 0.08);
+  animation: mic-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 120, 168, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(232, 120, 168, 0.12); }
+}
+
+/* Input — adjust padding when voice button present */
+.search-bar .voice-btn + input {
+  padding-left: 3.2rem;
+}
+
+.search-bar input.listening-input {
+  border-color: var(--pink-dim);
+  box-shadow: 0 0 0 3px rgba(232, 120, 168, 0.06);
+}
+
 .search-bar input {
   width: 100%;
   background: var(--bg-surface);

@@ -24,3 +24,14 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Docs (keep locally, don't commit)
+DEPLOYMENT.md
+MONETIZE.md
+architecture.md
+mvp.md
+nextPhase.md
+
+# Screenshots
+tunelet_screenshot/
+mood_music_screenshot/

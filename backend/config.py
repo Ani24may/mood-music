@@ -8,7 +8,7 @@ APP_ENV = os.getenv("APP_ENV", "development")
 USE_MOCKS = os.getenv("USE_MOCKS", "false").lower() == "true"
 MOCK_AI = os.getenv("MOCK_AI", "false").lower() == "true"
 MOCK_SPOTIFY = os.getenv("MOCK_SPOTIFY", "false").lower() == "true"
-SSL_VERIFY = os.getenv("SSL_VERIFY", "false").lower() == "true"
+SSL_VERIFY = os.getenv("SSL_VERIFY", "true").lower() == "true"
 
 # Spotify
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "")

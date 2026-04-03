@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 
 const LANGUAGES = ["Tamil", "Hindi", "English", "Telugu", "Any"];
 
@@ -24,9 +24,16 @@ const MOOD_SUGGESTIONS = [
   "missing home",
 ];
 
+// Check if Web Speech API is available
+const SpeechRecognition =
+  typeof window !== "undefined" &&
+  (window.SpeechRecognition || window.webkitSpeechRecognition);
+
 export default function MoodInput({ onGenerate, isLoading }) {
   const [mood, setMood] = useState("");
   const [language, setLanguage] = useState("Any");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -49,17 +56,93 @@ export default function MoodInput({ onGenerate, isLoading }) {
     }
   };
 
+  const startListening = useCallback(() => {
+    if (!SpeechRecognition || isLoading) return;
+
+    // Stop if already listening
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    // Set language based on selected language
+    const langMap = {
+      Tamil: "ta-IN",
+      Hindi: "hi-IN",
+      English: "en-US",
+      Telugu: "te-IN",
+      Any: "en-US",
+    };
+    recognition.lang = langMap[language] || "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join("");
+      setMood(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      // Silently handle — user can just type instead
+      if (event.error !== "aborted") {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.start();
+  }, [isListening, isLoading, language]);
+
   return (
     <form className="mood-input" onSubmit={handleSubmit}>
       <div className="search-bar">
+        {/* Voice button — left side */}
+        {SpeechRecognition && (
+          <button
+            type="button"
+            className={`voice-btn ${isListening ? "listening" : ""}`}
+            onClick={startListening}
+            disabled={isLoading}
+            title={isListening ? "Stop listening" : "Voice input"}
+          >
+            {isListening ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+            )}
+          </button>
+        )}
+
         <input
           type="text"
           value={mood}
           onChange={(e) => setMood(e.target.value)}
-          placeholder="how are you feeling right now?"
+          placeholder={isListening ? "listening..." : "how are you feeling right now?"}
           maxLength={500}
           disabled={isLoading}
           autoFocus
+          className={isListening ? "listening-input" : ""}
         />
         <button
           type="submit"
