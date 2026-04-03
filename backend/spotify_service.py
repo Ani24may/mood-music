@@ -97,6 +97,43 @@ MOCK_SONGS = [
 ]
 
 
+# Curated fallback songs — shown when Spotify is unavailable
+# Real Spotify URLs so users can still listen
+FALLBACK_SONGS = {
+    "Tamil": [
+        {"name": "Ennai Konjam", "artist": "Sid Sriram", "spotify_url": "https://open.spotify.com/search/Ennai%20Konjam%20Sid%20Sriram", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Ennai+Konjam+Sid+Sriram"},
+        {"name": "Kannazhaga", "artist": "Dhanush", "spotify_url": "https://open.spotify.com/search/Kannazhaga%20Dhanush", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Kannazhaga+Dhanush"},
+        {"name": "Munbe Vaa", "artist": "Shreya Ghoshal", "spotify_url": "https://open.spotify.com/search/Munbe%20Vaa%20Shreya%20Ghoshal", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Munbe+Vaa+Shreya+Ghoshal"},
+    ],
+    "Hindi": [
+        {"name": "Tum Hi Ho", "artist": "Arijit Singh", "spotify_url": "https://open.spotify.com/search/Tum%20Hi%20Ho%20Arijit%20Singh", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Tum+Hi+Ho+Arijit+Singh"},
+        {"name": "Agar Tum Saath Ho", "artist": "Arijit Singh, Alka Yagnik", "spotify_url": "https://open.spotify.com/search/Agar%20Tum%20Saath%20Ho", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Agar+Tum+Saath+Ho"},
+        {"name": "Channa Mereya", "artist": "Arijit Singh", "spotify_url": "https://open.spotify.com/search/Channa%20Mereya%20Arijit%20Singh", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Channa+Mereya+Arijit+Singh"},
+    ],
+    "Telugu": [
+        {"name": "Butta Bomma", "artist": "Armaan Malik", "spotify_url": "https://open.spotify.com/search/Butta%20Bomma%20Armaan%20Malik", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Butta+Bomma+Armaan+Malik"},
+        {"name": "Samajavaragamana", "artist": "Sid Sriram", "spotify_url": "https://open.spotify.com/search/Samajavaragamana%20Sid%20Sriram", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Samajavaragamana+Sid+Sriram"},
+        {"name": "Inkem Inkem", "artist": "Sid Sriram", "spotify_url": "https://open.spotify.com/search/Inkem%20Inkem%20Sid%20Sriram", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Inkem+Inkem+Sid+Sriram"},
+    ],
+    "English": [
+        {"name": "Someone Like You", "artist": "Adele", "spotify_url": "https://open.spotify.com/search/Someone%20Like%20You%20Adele", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Someone+Like+You+Adele"},
+        {"name": "Fix You", "artist": "Coldplay", "spotify_url": "https://open.spotify.com/search/Fix%20You%20Coldplay", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Fix+You+Coldplay"},
+        {"name": "Let Her Go", "artist": "Passenger", "spotify_url": "https://open.spotify.com/search/Let%20Her%20Go%20Passenger", "image": None, "preview_url": None, "youtube_url": "https://music.youtube.com/search?q=Let+Her+Go+Passenger"},
+    ],
+}
+
+
+def get_fallback_songs(language="Any"):
+    """Return curated fallback songs when Spotify API is unavailable."""
+    if language in FALLBACK_SONGS:
+        return FALLBACK_SONGS[language]
+    # "Any" — mix from all languages
+    mixed = []
+    for songs in FALLBACK_SONGS.values():
+        mixed.append(songs[0])
+    return mixed[:3]
+
+
 def _build_query(tags, language):
     """Build Spotify search query from mood tags and language."""
     lang_info = LANGUAGE_MAP.get(language, LANGUAGE_MAP["Any"])

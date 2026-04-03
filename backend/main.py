@@ -12,7 +12,7 @@ from usage_tracker import usage_tracker
 from stats_tracker import stats_tracker
 from cache import mood_cache
 from ai_service import parse_mood, generate_song_story, get_direct_recommendations
-from spotify_service import search_songs, search_songs_by_recommendations
+from spotify_service import search_songs, search_songs_by_recommendations, get_fallback_songs
 
 # Logging — never log secrets or full mood text in production
 logging.basicConfig(
@@ -207,17 +207,22 @@ async def generate_playlist(request: Request):
             songs = await search_songs(tags, language)
         except Exception as e:
             logger.error(f"Failed to search songs: {type(e).__name__}")
-            return JSONResponse(
-                status_code=503,
-                content={"error": "Service temporarily unavailable. Please try again."},
-            )
+            # Don't return 503 — return empty result so the app still works
+            songs = []
+
+    # If still no songs, use curated fallback
+    using_fallback = False
+    if not songs:
+        songs = get_fallback_songs(language)
+        using_fallback = True
+        logger.info(f"Using fallback songs for language={language}")
 
     if not songs:
         return JSONResponse(
             status_code=200,
             content={
                 "songs": [],
-                "message": "No songs matched your mood. Try something different?",
+                "message": "Music service is busy right now. Please try again in a few minutes.",
                 "mood_tags": tags,
                 "story": None,
                 "remaining": remaining,
@@ -242,7 +247,7 @@ async def generate_playlist(request: Request):
         "songs": songs,
         "mood_tags": tags,
         "story": story,
-        "message": None,
+        "message": "Our music engine is warming up. Here are some picks while we get back on track!" if using_fallback else None,
         "remaining": remaining,
         "limit": limit,
     }
