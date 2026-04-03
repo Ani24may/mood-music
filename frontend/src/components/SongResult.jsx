@@ -14,7 +14,8 @@ export default function SongResult({
   onSelectSong,
 }) {
   const otherSongs = songs.filter((s) => s.name !== song.name);
-  const [shareStatus, setShareStatus] = useState(null); // null | "generating" | "done" | "error"
+  const [shareStatus, setShareStatus] = useState(null);
+  const [showMoreSongs, setShowMoreSongs] = useState(false);
 
   const handleShare = async () => {
     setShareStatus("generating");
@@ -45,7 +46,7 @@ export default function SongResult({
   return (
     <div className="result-overlay" onClick={onClose}>
       <div className="result-card" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+        {/* Sticky Header — always visible */}
         <div className="result-header">
           <span className="result-mood">{mood}</span>
           <button className="close-btn" onClick={onClose}>
@@ -53,7 +54,7 @@ export default function SongResult({
           </button>
         </div>
 
-        {/* Body */}
+        {/* Scrollable Body */}
         <div className="result-body">
           {/* Song Hero */}
           <div className="song-hero">
@@ -69,7 +70,7 @@ export default function SongResult({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "var(--gold-dim)",
+                    color: "var(--accent-dim)",
                     fontSize: "1.5rem",
                   }}
                 >
@@ -160,35 +161,45 @@ export default function SongResult({
             </button>
           </div>
 
-          {/* More Songs */}
+          {/* More Songs — collapsible on mobile */}
           {otherSongs.length > 0 && (
             <div className="more-songs">
-              <div className="more-songs-header">More matches</div>
-              {otherSongs.slice(0, 5).map((s) => (
-                <div
-                  key={`${s.name}-${s.artist}`}
-                  className="more-song-item"
-                  onClick={() => onSelectSong(s)}
-                >
-                  <div className="more-song-img">
-                    {s.image ? (
-                      <img src={s.image} alt={s.name} />
-                    ) : (
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          background: "var(--bg)",
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="more-song-info">
-                    <div className="more-song-title">{s.name}</div>
-                    <div className="more-song-artist">{s.artist}</div>
-                  </div>
+              <button
+                className="more-songs-toggle"
+                onClick={() => setShowMoreSongs(!showMoreSongs)}
+              >
+                {showMoreSongs ? "Hide" : "Show"} {otherSongs.length} more {otherSongs.length === 1 ? "match" : "matches"}
+                <span className={`toggle-arrow ${showMoreSongs ? "open" : ""}`}>&#9662;</span>
+              </button>
+              {showMoreSongs && (
+                <div className="more-songs-list">
+                  {otherSongs.slice(0, 5).map((s) => (
+                    <div
+                      key={`${s.name}-${s.artist}`}
+                      className="more-song-item"
+                      onClick={() => onSelectSong(s)}
+                    >
+                      <div className="more-song-img">
+                        {s.image ? (
+                          <img src={s.image} alt={s.name} />
+                        ) : (
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              background: "var(--bg)",
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div className="more-song-info">
+                        <div className="more-song-title">{s.name}</div>
+                        <div className="more-song-artist">{s.artist}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>

@@ -531,6 +531,12 @@ body {
   align-items: center;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: linear-gradient(160deg, rgba(18, 18, 32, 0.98), rgba(12, 12, 22, 0.99));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2;
 }
 
 .result-mood {
@@ -789,6 +795,41 @@ body {
 .more-songs {
   margin-top: 1.25rem;
   width: 100%;
+}
+
+.more-songs-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.more-songs-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-hover);
+}
+
+.toggle-arrow {
+  font-size: 0.8em;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.toggle-arrow.open {
+  transform: rotate(180deg);
 }
 
 .more-songs-header {
@@ -1134,38 +1175,61 @@ body {
     font-size: 0.7rem;
   }
 
-  .result-card {
-    margin: 0.5rem;
-    max-width: 100%;
-    border-radius: 12px;
-  }
-
+  /* Bottom sheet on mobile */
   .result-overlay {
-    padding: 0.75rem;
+    padding: 0;
     align-items: flex-end;
   }
 
   .result-card {
-    max-height: 95vh;
+    margin: 0;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    animation: sheet-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes sheet-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* Drag handle indicator */
+  .result-header::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
   }
 
   .result-header {
-    padding: 0.9rem 1rem;
+    padding: 1.2rem 1rem 0.8rem;
+    position: relative;
   }
 
   .result-body {
-    padding: 1rem;
+    padding: 0.85rem 1rem 1.5rem;
   }
 
   .result-actions {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
   }
 
   .action-btn {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     text-align: center;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.68rem;
   }
 
   .song-hero-image {
@@ -1241,17 +1305,12 @@ body {
     font-size: 0.65rem;
   }
 
-  .result-overlay {
-    padding: 0.25rem;
-  }
-
   .result-card {
-    border-radius: 10px;
-    max-height: 97vh;
+    max-height: 94vh;
   }
 
   .result-header {
-    padding: 0.75rem 0.85rem;
+    padding: 1.1rem 0.85rem 0.7rem;
   }
 
   .result-mood {
@@ -1259,7 +1318,7 @@ body {
   }
 
   .result-body {
-    padding: 0.85rem;
+    padding: 0.75rem 0.85rem 1.25rem;
   }
 
   .song-hero {
