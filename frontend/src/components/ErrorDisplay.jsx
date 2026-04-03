@@ -10,22 +10,25 @@ const SUGGESTED_MOODS = [
 
 export default function ErrorDisplay({ error, message, onSuggestion }) {
   if (message && !error) {
+    const isServiceDown = message.toLowerCase().includes("busy") || message.toLowerCase().includes("warming");
     return (
       <div className="error-display no-results">
         <p className="error-message" style={{ color: "var(--cream-dim)" }}>
           {message}
         </p>
-        <div className="suggestions" style={{ marginTop: "1rem" }}>
-          {SUGGESTED_MOODS.map((m) => (
-            <button
-              key={m}
-              className="suggestion-chip"
-              onClick={() => onSuggestion(m)}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
+        {!isServiceDown && (
+          <div className="suggestions" style={{ marginTop: "1rem" }}>
+            {SUGGESTED_MOODS.map((m) => (
+              <button
+                key={m}
+                className="suggestion-chip"
+                onClick={() => onSuggestion(m)}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

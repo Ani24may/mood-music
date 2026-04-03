@@ -8,6 +8,7 @@ export default function SongResult({
   moodTags,
   story,
   songs,
+  message,
   onClose,
   onAnotherSong,
   onNewMood,
@@ -53,6 +54,13 @@ export default function SongResult({
             CLOSE
           </button>
         </div>
+
+        {/* Fallback notice */}
+        {message && (
+          <div className="result-notice">
+            {message}
+          </div>
+        )}
 
         {/* Scrollable Body */}
         <div className="result-body">

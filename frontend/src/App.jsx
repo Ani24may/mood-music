@@ -151,7 +151,7 @@ export default function App() {
 
           <ErrorDisplay
             error={error}
-            message={message}
+            message={!showResult ? message : null}
             onSuggestion={(mood) => handleGenerate(mood, "Any")}
           />
 
@@ -187,6 +187,7 @@ export default function App() {
           moodTags={moodTags}
           story={story}
           songs={songs}
+          message={message}
           onClose={handleNewMood}
           onAnotherSong={handleAnotherSong}
           onNewMood={handleNewMood}
