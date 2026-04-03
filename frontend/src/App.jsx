@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import MoodInput from "./components/MoodInput";
 import SongResult from "./components/SongResult";
 import ErrorDisplay from "./components/ErrorDisplay";
@@ -161,6 +162,7 @@ export default function App() {
           onSelectSong={handleSelectSong}
         />
       )}
+      <Analytics />
     </>
   );
 }
