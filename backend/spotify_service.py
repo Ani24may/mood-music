@@ -229,7 +229,7 @@ async def search_specific_song(song_name, artist):
         if tracks:
             return tracks[0]
     except Exception as e:
-        logger.warning(f"Failed to find '{song_name}' by {artist}: {e}")
+        logger.warning(f"Failed to find '{song_name}' by {artist}: {type(e).__name__}")
 
     # Fallback: simpler search without field qualifiers
     try:
@@ -239,7 +239,7 @@ async def search_specific_song(song_name, artist):
         if tracks:
             return tracks[0]
     except Exception as e:
-        logger.warning(f"Fallback search failed for '{song_name}': {e}")
+        logger.warning(f"Fallback search failed for '{song_name}': {type(e).__name__}")
 
     return None
 
@@ -313,5 +313,5 @@ async def search_songs(tags, language):
         raise
 
     except Exception as e:
-        logger.error(f"Spotify search error: {e}")
+        logger.error(f"Spotify search error: {type(e).__name__}")
         raise

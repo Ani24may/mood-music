@@ -249,7 +249,7 @@ async def get_direct_recommendations(mood, language):
             return None, None
 
     except Exception as e:
-        logger.warning(f"Direct reco failed: {e}")
+        logger.warning(f"Direct reco failed: {type(e).__name__}")
         return None, None
 
 
@@ -358,5 +358,5 @@ async def generate_song_story(mood, song_name, artist):
                 return text.strip().strip('"')
 
     except Exception as e:
-        logger.warning(f"Failed to generate song story: {e}")
+        logger.warning(f"Failed to generate song story: {type(e).__name__}")
         return None
