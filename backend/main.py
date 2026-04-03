@@ -108,14 +108,9 @@ async def health():
 
 @app.get("/usage")
 async def get_usage(request: Request):
-    """Return remaining daily searches for this IP."""
+    """Return remaining daily searches for this IP.
+    Not rate limited — read-only endpoint, doesn't consume resources."""
     client_ip = _get_client_ip(request)
-
-    # Rate limit this endpoint too — prevent probing
-    is_limited, _ = rate_limiter.is_rate_limited(client_ip)
-    if is_limited:
-        return JSONResponse(status_code=429, content={"error": "Too many requests."})
-
     remaining = usage_tracker.get_remaining(client_ip)
     return {"remaining": remaining, "limit": DAILY_FREE_LIMIT}
 
@@ -139,19 +134,7 @@ async def generate_playlist(request: Request):
             headers={"Retry-After": "60"},
         )
 
-    # Daily usage quota check
-    allowed, remaining, limit = usage_tracker.check_and_increment(client_ip)
-    if not allowed:
-        return JSONResponse(
-            status_code=402,
-            content={
-                "error": "You've used all your free searches for today. Come back tomorrow!",
-                "remaining": 0,
-                "limit": limit,
-            },
-        )
-
-    # Parse and validate request body
+    # Parse and validate request body BEFORE counting usage
     try:
         body = await request.json()
     except Exception:
@@ -165,6 +148,18 @@ async def generate_playlist(request: Request):
         return JSONResponse(
             status_code=400,
             content={"error": error},
+        )
+
+    # Daily usage quota check — after validation so bad requests don't count
+    allowed, remaining, limit = usage_tracker.check_and_increment(client_ip)
+    if not allowed:
+        return JSONResponse(
+            status_code=402,
+            content={
+                "error": "You've used all your free searches for today. Come back tomorrow!",
+                "remaining": 0,
+                "limit": limit,
+            },
         )
 
     # Log truncated mood in production to avoid PII leakage
