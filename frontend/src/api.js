@@ -21,7 +21,11 @@ export async function generatePlaylist(mood, language) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || `Request failed (${response.status})`);
+      const err = new Error(data.error || `Request failed (${response.status})`);
+      err.status = response.status;
+      err.remaining = data.remaining;
+      err.limit = data.limit;
+      throw err;
     }
 
     return data;
@@ -37,5 +41,15 @@ export async function generatePlaylist(mood, language) {
     }
 
     throw error;
+  }
+}
+
+export async function getUsage() {
+  try {
+    const response = await fetch(`${API_BASE}/usage`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
   }
 }

@@ -195,6 +195,56 @@ body {
   align-items: center;
 }
 
+/* ===== SEARCH COUNTER ===== */
+.search-counter {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  transition: color 0.3s ease;
+}
+
+.search-counter.low {
+  color: var(--pink);
+}
+
+/* ===== QUOTA WALL ===== */
+.quota-wall {
+  width: 100%;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.quota-wall-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.quota-wall h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.quota-wall p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+
+.quota-wall-hint {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
 /* ===== MOOD INPUT ===== */
 .mood-input {
   width: 100%;

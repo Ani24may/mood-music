@@ -29,7 +29,7 @@ const SpeechRecognition =
   typeof window !== "undefined" &&
   (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-export default function MoodInput({ onGenerate, isLoading }) {
+export default function MoodInput({ onGenerate, isLoading, remaining, limit }) {
   const [mood, setMood] = useState("");
   const [language, setLanguage] = useState("Any");
   const [isListening, setIsListening] = useState(false);
@@ -153,6 +153,13 @@ export default function MoodInput({ onGenerate, isLoading }) {
           &#10140;
         </button>
       </div>
+
+      {/* Search counter */}
+      {remaining !== null && (
+        <div className={`search-counter ${remaining <= 3 ? "low" : ""}`}>
+          {remaining} {remaining === 1 ? "search" : "searches"} left today
+        </div>
+      )}
 
       {/* Emoji quick-picks */}
       <div className="language-bar">

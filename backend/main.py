@@ -5,9 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from config import ALLOWED_ORIGIN, APP_ENV, MAX_REQUEST_BODY_BYTES
+from config import ALLOWED_ORIGIN, APP_ENV, MAX_REQUEST_BODY_BYTES, DAILY_FREE_LIMIT
 from validators import validate_request
 from rate_limiter import rate_limiter
+from usage_tracker import usage_tracker
 from cache import mood_cache
 from ai_service import parse_mood, generate_song_story, get_direct_recommendations
 from spotify_service import search_songs, search_songs_by_recommendations
@@ -87,26 +88,60 @@ async def startup():
     logger.info("=" * 50)
 
 
+def _get_client_ip(request: Request) -> str:
+    """Extract client IP, preferring X-Forwarded-For when behind reverse proxy.
+    Only trusts the first IP in the chain (set by the proxy closest to the client)."""
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        ip = forwarded_for.split(",")[0].strip()
+        # Basic validation — reject obviously fake values
+        if ip and len(ip) <= 45 and not ip.startswith("127."):
+            return ip
+    return request.client.host
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
+@app.get("/usage")
+async def get_usage(request: Request):
+    """Return remaining daily searches for this IP."""
+    client_ip = _get_client_ip(request)
+
+    # Rate limit this endpoint too — prevent probing
+    is_limited, _ = rate_limiter.is_rate_limited(client_ip)
+    if is_limited:
+        return JSONResponse(status_code=429, content={"error": "Too many requests."})
+
+    remaining = usage_tracker.get_remaining(client_ip)
+    return {"remaining": remaining, "limit": DAILY_FREE_LIMIT}
+
+
 @app.post("/generate-playlist")
 async def generate_playlist(request: Request):
-    # Rate limiting — use X-Forwarded-For when behind reverse proxy
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
-        client_ip = forwarded_for.split(",")[0].strip()
-    else:
-        client_ip = request.client.host
+    client_ip = _get_client_ip(request)
 
+    # Rate limiting
     is_limited, message = rate_limiter.is_rate_limited(client_ip)
     if is_limited:
         return JSONResponse(
             status_code=429,
             content={"error": message},
             headers={"Retry-After": "60"},
+        )
+
+    # Daily usage quota check
+    allowed, remaining, limit = usage_tracker.check_and_increment(client_ip)
+    if not allowed:
+        return JSONResponse(
+            status_code=402,
+            content={
+                "error": "You've used all your free searches for today. Come back tomorrow!",
+                "remaining": 0,
+                "limit": limit,
+            },
         )
 
     # Parse and validate request body
@@ -178,6 +213,8 @@ async def generate_playlist(request: Request):
                 "message": "No songs matched your mood. Try something different?",
                 "mood_tags": tags,
                 "story": None,
+                "remaining": remaining,
+                "limit": limit,
             },
         )
 
@@ -196,6 +233,8 @@ async def generate_playlist(request: Request):
         "mood_tags": tags,
         "story": story,
         "message": None,
+        "remaining": remaining,
+        "limit": limit,
     }
 
 

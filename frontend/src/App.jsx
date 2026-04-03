@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import MoodInput from "./components/MoodInput";
 import SongResult from "./components/SongResult";
 import ErrorDisplay from "./components/ErrorDisplay";
 import BackgroundAnimation from "./components/BackgroundAnimation";
-import { generatePlaylist } from "./api";
+import { generatePlaylist, getUsage } from "./api";
 
 const TAGLINES = [
   { line1: "How are you", line2: "feeling right now?" },
@@ -29,9 +29,21 @@ export default function App() {
   const [selectedSong, setSelectedSong] = useState(null);
   const [pastSessions, setPastSessions] = useState([]);
   const [story, setStory] = useState(null);
+  const [remaining, setRemaining] = useState(null);
+  const [limit, setLimit] = useState(10);
 
   const tagline = useMemo(() => {
     return TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
+  }, []);
+
+  // Fetch remaining searches on page load
+  useEffect(() => {
+    getUsage().then((data) => {
+      if (data) {
+        setRemaining(data.remaining);
+        setLimit(data.limit);
+      }
+    });
   }, []);
 
   const handleGenerate = useCallback(async (mood, language) => {
@@ -53,6 +65,10 @@ export default function App() {
       setMessage(data.message || null);
       setStory(data.story || null);
 
+      // Update remaining from response
+      if (data.remaining !== undefined) setRemaining(data.remaining);
+      if (data.limit !== undefined) setLimit(data.limit);
+
       if (fetchedSongs.length > 0) {
         setSelectedSong(fetchedSongs[0]);
         setShowResult(true);
@@ -63,6 +79,9 @@ export default function App() {
       }
     } catch (err) {
       setError(err.message);
+      // Update remaining from error response (402 quota exceeded)
+      if (err.remaining !== undefined) setRemaining(err.remaining);
+      if (err.limit !== undefined) setLimit(err.limit);
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +104,8 @@ export default function App() {
     setSelectedSong(song);
   };
 
+  const isQuotaExhausted = remaining === 0;
+
   return (
     <>
       <BackgroundAnimation moodTags={moodTags} />
@@ -100,10 +121,21 @@ export default function App() {
         </header>
 
         <main className="main">
-          <MoodInput
-            onGenerate={handleGenerate}
-            isLoading={isLoading}
-          />
+          {isQuotaExhausted ? (
+            <div className="quota-wall">
+              <div className="quota-wall-icon">&#9749;</div>
+              <h2>You've used all {limit} free searches today</h2>
+              <p>Come back tomorrow for more mood-matched music!</p>
+              <div className="quota-wall-hint">Resets at midnight UTC</div>
+            </div>
+          ) : (
+            <MoodInput
+              onGenerate={handleGenerate}
+              isLoading={isLoading}
+              remaining={remaining}
+              limit={limit}
+            />
+          )}
 
           {isLoading && (
             <div className="loading">
@@ -132,7 +164,8 @@ export default function App() {
                 <div
                   key={i}
                   className="past-session-item"
-                  onClick={() => handleGenerate(session.mood, "Any")}
+                  onClick={() => !isQuotaExhausted && handleGenerate(session.mood, "Any")}
+                  style={isQuotaExhausted ? { opacity: 0.4, cursor: "not-allowed" } : {}}
                 >
                   <span className="past-session-mood">{session.mood}</span>
                   <span className="past-session-song">{session.song}</span>
@@ -147,7 +180,6 @@ export default function App() {
         </footer>
       </div>
 
-      {/* Result overlay rendered OUTSIDE .app to avoid 3D transform stacking context issues */}
       {showResult && selectedSong && (
         <SongResult
           song={selectedSong}
