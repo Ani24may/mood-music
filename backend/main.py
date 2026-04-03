@@ -9,6 +9,7 @@ from config import ALLOWED_ORIGIN, APP_ENV, MAX_REQUEST_BODY_BYTES, DAILY_FREE_L
 from validators import validate_request
 from rate_limiter import rate_limiter
 from usage_tracker import usage_tracker
+from stats_tracker import stats_tracker
 from cache import mood_cache
 from ai_service import parse_mood, generate_song_story, get_direct_recommendations
 from spotify_service import search_songs, search_songs_by_recommendations
@@ -119,6 +120,12 @@ async def get_usage(request: Request):
     return {"remaining": remaining, "limit": DAILY_FREE_LIMIT}
 
 
+@app.get("/stats")
+async def get_stats():
+    """Return search stats for the last 7 days. No auth — data is anonymous."""
+    return stats_tracker.get_stats()
+
+
 @app.post("/generate-playlist")
 async def generate_playlist(request: Request):
     client_ip = _get_client_ip(request)
@@ -227,6 +234,9 @@ async def generate_playlist(request: Request):
             logger.info(f"Song story generated ({len(story)} chars)")
     except Exception as e:
         logger.warning(f"Story generation failed: {type(e).__name__}")
+
+    # Record stats
+    stats_tracker.record(client_ip)
 
     return {
         "songs": songs,
