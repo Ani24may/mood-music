@@ -13,6 +13,7 @@ from stats_tracker import stats_tracker
 from cache import mood_cache
 from ai_service import parse_mood, generate_song_story, get_direct_recommendations
 from spotify_service import search_songs, search_songs_by_recommendations, get_fallback_songs
+from supabase_client import record_mood, get_trending, get_mood_history, get_stats as get_supabase_stats
 
 # Logging — never log secrets or full mood text in production
 logging.basicConfig(
@@ -117,8 +118,26 @@ async def get_usage(request: Request):
 
 @app.get("/stats")
 async def get_stats():
-    """Return search stats for the last 7 days. No auth — data is anonymous."""
+    """Return search stats from Supabase. Falls back to in-memory if Supabase unavailable."""
+    from config import SUPABASE_URL
+    if SUPABASE_URL:
+        return await get_supabase_stats()
     return stats_tracker.get_stats()
+
+
+@app.get("/trending")
+async def trending_moods():
+    """Return top trending moods from recent searches."""
+    moods = await get_trending(limit=10)
+    return {"trending": moods}
+
+
+@app.get("/mood-history")
+async def mood_history(request: Request):
+    """Return mood history for this IP (hashed, last 30 days)."""
+    client_ip = _get_client_ip(request)
+    history = await get_mood_history(client_ip, days=30)
+    return {"history": history}
 
 
 @app.post("/generate-playlist")
@@ -237,6 +256,19 @@ async def generate_playlist(request: Request):
 
     # Record stats
     stats_tracker.record(client_ip)
+
+    # Record to Supabase (non-blocking — doesn't affect response)
+    try:
+        await record_mood(
+            mood_text=mood,
+            tags=tags,
+            language=language,
+            song_name=first_song["name"],
+            song_artist=first_song["artist"],
+            client_ip=client_ip,
+        )
+    except Exception:
+        pass
 
     return {
         "songs": songs,

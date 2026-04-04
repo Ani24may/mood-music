@@ -27,6 +27,10 @@ RATE_LIMIT_GLOBAL = int(os.getenv("RATE_LIMIT_GLOBAL", "100"))
 AI_TIMEOUT_MS = int(os.getenv("AI_TIMEOUT_MS", "3000"))
 SPOTIFY_TIMEOUT_MS = int(os.getenv("SPOTIFY_TIMEOUT_MS", "5000"))
 
+# Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
 # Usage quota
 DAILY_FREE_LIMIT = int(os.getenv("DAILY_FREE_LIMIT", "10"))
 

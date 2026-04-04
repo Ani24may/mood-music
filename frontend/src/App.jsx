@@ -3,6 +3,8 @@ import MoodInput from "./components/MoodInput";
 import SongResult from "./components/SongResult";
 import ErrorDisplay from "./components/ErrorDisplay";
 import BackgroundAnimation from "./components/BackgroundAnimation";
+import TrendingMoods from "./components/TrendingMoods";
+import MoodHeatmap from "./components/MoodHeatmap";
 import { generatePlaylist, getUsage } from "./api";
 
 const TAGLINES = [
@@ -150,6 +152,14 @@ export default function App() {
             </div>
           )}
 
+          {/* Trending Moods */}
+          {!showResult && !isLoading && !isQuotaExhausted && (
+            <TrendingMoods
+              onSelectMood={(mood) => handleGenerate(mood, "Any")}
+              isLoading={isLoading}
+            />
+          )}
+
           <ErrorDisplay
             error={error}
             message={message}
@@ -173,6 +183,11 @@ export default function App() {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Mood Heatmap */}
+          {!showResult && !isLoading && (
+            <MoodHeatmap />
           )}
         </main>
 
