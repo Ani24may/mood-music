@@ -359,17 +359,27 @@ export async function generateShareCardProper({ mood, song, story }) {
     }
   }
 
-  // === FOOTER BRANDING ===
-  ctx.textAlign = "center";
-  ctx.font = "500 13px Inter, sans-serif";
-  ctx.fillStyle = "rgba(74, 69, 64, 0.6)";
-  ctx.fillText("moodmusic.app", CARD_W / 2, CARD_H - 65);
+  // === WATERMARK — Bottom ===
+  // Background strip
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.fillRect(pad, CARD_H - pad - 50, CARD_W - pad * 2, 50);
 
-  // Sparkle decorations near brand
-  ctx.font = "16px serif";
-  ctx.fillStyle = "rgba(212, 168, 83, 0.3)";
-  ctx.fillText("\u2726", CARD_W / 2 - 80, CARD_H - 62);
-  ctx.fillText("\u2726", CARD_W / 2 + 80, CARD_H - 62);
+  // App URL — prominent but tasteful
+  ctx.textAlign = "center";
+  ctx.font = "600 16px Inter, sans-serif";
+  ctx.fillStyle = "rgba(92, 224, 216, 0.7)";
+  ctx.fillText("mood-music-ebon.vercel.app", CARD_W / 2, CARD_H - pad - 28);
+
+  // Tagline
+  ctx.font = "300 11px Inter, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+  ctx.fillText("Type your mood. Get the perfect song.", CARD_W / 2, CARD_H - pad - 10);
+
+  // === WATERMARK — Top corner ===
+  ctx.textAlign = "right";
+  ctx.font = "500 12px Inter, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+  ctx.fillText("moodmusic", CARD_W - pad - 10, pad + 20);
 
   // Convert to blob
   return new Promise((resolve) => {
@@ -393,7 +403,7 @@ export async function shareOrDownload({ mood, song, story }) {
     try {
       await navigator.share({
         title: "Mood Music",
-        text: `"${mood}" \u2014 ${song.name} by ${song.artist}`,
+        text: `"${mood}" \u2014 ${song.name} by ${song.artist}\n\n${song.spotify_url || ""}\n\nhttps://mood-music-ebon.vercel.app`.trim(),
         files: [file],
       });
       return "shared";
