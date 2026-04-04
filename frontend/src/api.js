@@ -53,3 +53,25 @@ export async function getUsage() {
     return null;
   }
 }
+
+export async function getTrending() {
+  try {
+    const response = await fetch(`${API_BASE}/trending`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.trending || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getMoodHistory() {
+  try {
+    const response = await fetch(`${API_BASE}/mood-history`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.history || [];
+  } catch {
+    return [];
+  }
+}
